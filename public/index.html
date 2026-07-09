@@ -130,6 +130,7 @@
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: all 0.3s;
+            cursor: pointer;
         }
         .case-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         .case-header {
@@ -183,6 +184,7 @@
         }
         .form-group { margin-bottom: 16px; }
         .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+        .form-label .required { color: var(--danger); }
         .form-input, .form-textarea, .form-select {
             width: 100%;
             padding: 10px 14px;
@@ -224,6 +226,8 @@
             overflow-y: auto;
             animation: modalSlide 0.3s ease;
         }
+        .modal-content.wide { max-width: 1000px; }
+        .modal-content.xwide { max-width: 1200px; }
         @keyframes modalSlide {
             from { opacity: 0; transform: translateY(-30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -268,6 +272,86 @@
             margin: 3px;
             font-size: 13px;
         }
+        .slide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+        .slide-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .slide-item:hover { transform: scale(1.02); }
+        .slide-item.selected { box-shadow: 0 0 0 3px var(--primary); }
+        .slide-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+        .slide-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .ppt-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        .ppt-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .ppt-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            padding: 10px;
+            background: #f7fafc;
+        }
+        .ppt-preview img {
+            width: 100%;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .search-results {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .search-result-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .search-result-item:hover { background: var(--light); }
+        .search-result-item:last-child { border-bottom: none; }
+        .result-ppt-title { font-weight: 600; color: var(--primary); margin-bottom: 5px; }
+        .result-match-info { font-size: 13px; color: var(--gray); }
+        .result-preview-img {
+            width: 120px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
         @media (max-width: 768px) {
             .header-content { flex-direction: column; }
             .nav-tabs { justify-content: center; }
@@ -284,7 +368,7 @@
             <nav class="nav-tabs">
                 <div class="nav-tab active" data-tab="dashboard">📊 总览</div>
                 <div class="nav-tab" data-tab="cases">📚 案例</div>
-                <div class="nav-tab" data-tab="ppt">📑 PPT</div>
+                <div class="nav-tab" data-tab="ppt">📑 PPT库</div>
                 <div class="nav-tab" data-tab="feedback">💬 反馈</div>
                 <div class="nav-tab" data-tab="data">💾 数据</div>
             </nav>
@@ -298,9 +382,10 @@
                 <button class="btn btn-primary" onclick="performSearch()">🔍 搜索</button>
                 <button class="btn btn-secondary" onclick="showExtractModal()">🤖 AI提取</button>
                 <button class="btn btn-success" onclick="showAddCaseModal()">➕ 案例</button>
-                <button class="btn btn-warning" onclick="showAddPptModal()">📤 PPT</button>
+                <button class="btn btn-warning" onclick="showUploadPptModal()">📤 上传PPT</button>
             </div>
             <div class="tag-filters" id="tagFilters"></div>
+            <div id="searchResultsContainer"></div>
         </section>
 
         <section class="content-section active" id="dashboard">
@@ -313,7 +398,7 @@
                 <h3 class="form-title">⚡ 快速操作</h3>
                 <div class="data-actions">
                     <button class="btn btn-primary" onclick="showAddCaseModal()">➕ 添加案例</button>
-                    <button class="btn btn-success" onclick="showAddPptModal()">📤 上传PPT</button>
+                    <button class="btn btn-success" onclick="showUploadPptModal()">📤 上传PPT</button>
                     <button class="btn btn-secondary" onclick="showAddFeedbackModal()">📝 添加反馈</button>
                     <button class="btn btn-warning" onclick="exportAllData()">📤 导出数据</button>
                 </div>
@@ -333,8 +418,8 @@
         <section class="content-section" id="ppt">
             <div class="form-section">
                 <div class="form-title">
-                    <span>📑 PPT印证案例</span>
-                    <button class="btn btn-success btn-sm" onclick="showAddPptModal()">📤 上传</button>
+                    <span>📑 PPT库</span>
+                    <button class="btn btn-success btn-sm" onclick="showUploadPptModal()">📤 上传PPT</button>
                 </div>
                 <div class="case-grid" id="pptGrid"></div>
             </div>
@@ -380,21 +465,21 @@
                 <form id="caseForm">
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">股票名称 *</label>
+                            <label class="form-label">股票名称 <span class="required">*</span></label>
                             <input type="text" class="form-input" name="stockName" required placeholder="如：苹果">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">股票代码 *</label>
+                            <label class="form-label">股票代码 <span class="required">*</span></label>
                             <input type="text" class="form-input" name="stockCode" required placeholder="如：AAPL">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">日期 *</label>
+                            <label class="form-label">日期 <span class="required">*</span></label>
                             <input type="date" class="form-input" name="date" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">分析方法 *</label>
+                            <label class="form-label">分析方法 <span class="required">*</span></label>
                             <select class="form-select" name="method" required>
                                 <option value="">请选择</option>
                                 <option value="支撑压力">支撑压力</option>
@@ -434,33 +519,59 @@
                         <label class="form-label">标签（用逗号分隔）</label>
                         <input type="text" class="form-input" name="tags" placeholder="如：纳斯达克,科技股,长线">
                     </div>
+                    
+                    <!-- 关联PPT -->
+                    <div class="form-group">
+                        <label class="form-label">关联PPT（可选）</label>
+                        <select class="form-select" id="casePptSelect" onchange="loadCasePptSlides()">
+                            <option value="">不关联PPT</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="casePptSlidesContainer" style="display: none;">
+                        <label class="form-label">选择PPT页面</label>
+                        <div class="slide-grid" id="casePptSlides"></div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-primary" style="width: 100%;">💾 保存案例</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- 添加PPT模态框 -->
-    <div class="modal-overlay" id="addPptModal">
-        <div class="modal-content">
+    <!-- 上传PPT模态框 -->
+    <div class="modal-overlay" id="uploadPptModal">
+        <div class="modal-content wide">
             <div class="modal-header">
-                <h3 class="modal-title">📑 添加PPT印证</h3>
-                <button class="modal-close" onclick="closeModal('addPptModal')">&times;</button>
+                <h3 class="modal-title">📤 上传PPT到PPT库</h3>
+                <button class="modal-close" onclick="closeModal('uploadPptModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="pptForm">
+                <!-- 步骤1: 上传文件 -->
+                <div id="pptUploadStep1">
                     <div class="form-group">
-                        <label class="form-label">标题 *</label>
-                        <input type="text" class="form-input" name="title" required placeholder="PPT标题">
+                        <label class="form-label">选择PPT文件 (.pptx) <span class="required">*</span></label>
+                        <input type="file" class="form-input" id="pptFileInput" accept=".pptx,.ppt" onchange="handlePptFileSelect(event)">
+                    </div>
+                    <div id="pptUploadPreview" style="display: none; margin: 15px 0; padding: 15px; background: #f0fff4; border-radius: 10px;">
+                        <p>📄 <span id="pptFileName"></span></p>
+                    </div>
+                    <button class="btn btn-success" onclick="uploadPptFile()" id="pptUploadBtn" style="width: 100%;" disabled>📤 上传并提取页面</button>
+                </div>
+                
+                <!-- 步骤2: 填写信息并保存 -->
+                <div id="pptUploadStep2" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">PPT标题 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="pptUploadTitle" placeholder="如：2024年7月直播案例分析">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">日期 *</label>
-                            <input type="date" class="form-input" name="date" required>
+                            <label class="form-label">日期 <span class="required">*</span></label>
+                            <input type="date" class="form-input" id="pptUploadDate">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">印证类型 *</label>
-                            <select class="form-select" name="verificationType" required>
+                            <label class="form-label">印证类型</label>
+                            <select class="form-select" id="pptUploadType">
                                 <option value="">请选择</option>
                                 <option value="筹码印证">筹码印证</option>
                                 <option value="机构DeepChart印证">机构DeepChart印证</option>
@@ -472,19 +583,37 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">涉及股票（格式：名称:代码,名称:代码）</label>
-                        <input type="text" class="form-input" name="stocks" placeholder="如：苹果:AAPL,微软:MSFT">
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">标签（用逗号分隔）</label>
-                        <input type="text" class="form-input" name="tags" placeholder="如：筹码,机构,AI赢家">
+                        <input type="text" class="form-input" id="pptUploadTags" placeholder="如：筹码,机构,AI赢家">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">说明</label>
-                        <textarea class="form-textarea" name="description" placeholder="PPT内容说明..."></textarea>
+                        <label class="form-label">提取的页面 (<span id="pptSlideCount">0</span>张)</label>
+                        <div class="slide-grid" id="pptSlidesGrid"></div>
                     </div>
-                    <button type="submit" class="btn btn-success" style="width: 100%;">💾 保存PPT案例</button>
-                </form>
+                    <div class="data-actions">
+                        <button class="btn btn-secondary" onclick="resetPptUpload()">🔄 重新上传</button>
+                        <button class="btn btn-success" onclick="savePptToLibrary()" style="flex: 1;">💾 保存到PPT库</button>
+                    </div>
+                </div>
+                
+                <!-- 上传进度 -->
+                <div id="pptUploadProgress" style="display: none; text-align: center; padding: 30px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                    <p>正在上传并提取页面...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看PPT模态框 -->
+    <div class="modal-overlay" id="viewPptModal">
+        <div class="modal-content xwide">
+            <div class="modal-header">
+                <h3 class="modal-title" id="viewPptTitle">📑 PPT详情</h3>
+                <button class="modal-close" onclick="closeModal('viewPptModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="viewPptContent"></div>
             </div>
         </div>
     </div>
@@ -500,16 +629,16 @@
                 <form id="feedbackForm">
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">学员姓名 *</label>
+                            <label class="form-label">学员姓名 <span class="required">*</span></label>
                             <input type="text" class="form-input" name="studentName" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">日期 *</label>
+                            <label class="form-label">日期 <span class="required">*</span></label>
                             <input type="date" class="form-input" name="date" required>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">反馈内容 *</label>
+                        <label class="form-label">反馈内容 <span class="required">*</span></label>
                         <textarea class="form-textarea" name="content" required placeholder="学员反馈内容..."></textarea>
                     </div>
                     <div class="form-row">
@@ -558,11 +687,28 @@
         </div>
     </div>
 
+    <!-- 查看案例详情模态框（带PPT页面） -->
+    <div class="modal-overlay" id="caseDetailModal">
+        <div class="modal-content xwide">
+            <div class="modal-header">
+                <h3 class="modal-title">📚 案例详情</h3>
+                <button class="modal-close" onclick="closeModal('caseDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="caseDetailContent"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 全局状态
         let currentTab = 'dashboard';
         let selectedTags = [];
-        let allData = { cases: [], pptCases: [], feedback: [] };
+        let allData = { cases: [], pptLibrary: [], feedback: [] };
+        let selectedPptFile = null;
+        let extractedPptSlides = [];
+        let currentPptFileId = null;
+        let selectedSlideNumber = null;
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
@@ -576,7 +722,6 @@
             });
 
             document.getElementById('caseForm').addEventListener('submit', handleCaseSubmit);
-            document.getElementById('pptForm').addEventListener('submit', handlePptSubmit);
             document.getElementById('feedbackForm').addEventListener('submit', handleFeedbackSubmit);
 
             document.getElementById('globalSearch').addEventListener('keypress', (e) => {
@@ -592,30 +737,14 @@
                 refreshAll();
             } catch (err) {
                 console.error('加载数据失败:', err);
-                // 使用示例数据
                 initSampleData();
             }
         }
 
         function initSampleData() {
             allData = {
-                cases: [
-                    {
-                        id: '1',
-                        stockName: '苹果',
-                        stockCode: 'AAPL',
-                        date: '2024-01-15',
-                        method: '支撑压力',
-                        support: '180美元',
-                        resistance: '200美元',
-                        stopLoss: '175美元',
-                        target: '220美元',
-                        content: '苹果在180美元获得强支撑',
-                        tags: ['纳斯达克', '科技股'],
-                        createdAt: new Date().toISOString()
-                    }
-                ],
-                pptCases: [],
+                cases: [],
+                pptLibrary: [],
                 feedback: []
             };
             refreshAll();
@@ -625,9 +754,10 @@
             renderStats();
             renderTags();
             renderCases();
-            renderPptCases();
+            renderPptLibrary();
             renderFeedback();
             renderCharts();
+            updateCasePptSelect();
         }
 
         function switchTab(tabId) {
@@ -651,8 +781,8 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">📑</div>
-                    <div class="stat-value">${allData.pptCases.length}</div>
-                    <div class="stat-label">PPT印证</div>
+                    <div class="stat-value">${allData.pptLibrary.length}</div>
+                    <div class="stat-label">PPT库</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">💬</div>
@@ -669,7 +799,7 @@
 
         function getAllTags() {
             const tagSet = new Set();
-            [...allData.cases, ...allData.pptCases, ...allData.feedback].forEach(item => {
+            [...allData.cases, ...allData.pptLibrary, ...allData.feedback].forEach(item => {
                 item.tags?.forEach(tag => tagSet.add(tag));
             });
             return Array.from(tagSet);
@@ -695,7 +825,7 @@
             else selectedTags.push(tag);
             renderTags();
             renderCases();
-            renderPptCases();
+            renderPptLibrary();
         }
 
         // 案例
@@ -713,7 +843,7 @@
             }
 
             container.innerHTML = cases.map(c => `
-                <div class="case-card">
+                <div class="case-card" onclick="showCaseDetail('${c.id}')">
                     <div class="case-header">
                         <div class="case-title">${c.stockName} ${c.stockCode}</div>
                         <div class="case-date">${formatDate(c.date)}</div>
@@ -722,11 +852,11 @@
                         <div class="case-info-row"><span class="case-label">方法</span><span class="case-value">${c.method}</span></div>
                         ${c.support ? `<div class="case-info-row"><span class="case-label">支撑</span><span class="case-value">${c.support}</span></div>` : ''}
                         ${c.resistance ? `<div class="case-info-row"><span class="case-label">压力</span><span class="case-value">${c.resistance}</span></div>` : ''}
-                        ${c.stopLoss ? `<div class="case-info-row"><span class="case-label">止损</span><span class="case-value">${c.stopLoss}</span></div>` : ''}
-                        ${c.target ? `<div class="case-info-row"><span class="case-label">目标</span><span class="case-value">${c.target}</span></div>` : ''}
+                        ${c.pptId ? `<div class="case-info-row"><span class="case-label">PPT</span><span class="case-value" style="color: var(--success);">✓ 已关联</span></div>` : ''}
                         <div class="case-tags">${c.tags?.map(t => `<span class="case-tag">${t}</span>`).join('') || ''}</div>
                     </div>
-                    <div class="case-actions">
+                    <div class="case-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-primary btn-sm" onclick="showCaseDetail('${c.id}')">👁️ 查看</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteCase('${c.id}')">删除</button>
                     </div>
                 </div>
@@ -739,6 +869,13 @@
             const data = Object.fromEntries(formData);
             if (data.tags) data.tags = data.tags.split(',').map(t => t.trim()).filter(t => t);
 
+            // 添加PPT关联
+            const pptSelect = document.getElementById('casePptSelect');
+            if (pptSelect.value) {
+                data.pptId = pptSelect.value;
+                data.slideNumber = selectedSlideNumber;
+            }
+
             try {
                 const response = await fetch('/api/cases', {
                     method: 'POST',
@@ -748,6 +885,8 @@
                 if (response.ok) {
                     closeModal('addCaseModal');
                     e.target.reset();
+                    selectedSlideNumber = null;
+                    document.getElementById('casePptSlidesContainer').style.display = 'none';
                     loadAllData();
                     alert('案例添加成功！');
                 }
@@ -766,77 +905,174 @@
             }
         }
 
-        // PPT
-        function renderPptCases() {
-            let cases = allData.pptCases;
-            if (selectedTags.length > 0) {
-                cases = cases.filter(c => selectedTags.some(tag => c.tags?.includes(tag)));
+        function showCaseDetail(caseId) {
+            const c = allData.cases.find(item => item.id === caseId);
+            if (!c) return;
+
+            let pptSection = '';
+            if (c.pptId) {
+                const ppt = allData.pptLibrary.find(p => p.id === c.pptId);
+                if (ppt) {
+                    const slide = ppt.slides.find(s => s.slideNumber === c.slideNumber);
+                    if (slide) {
+                        pptSection = `
+                            <div style="margin-top: 20px; padding: 20px; background: #f0fff4; border-radius: 12px;">
+                                <h4 style="margin-bottom: 15px; color: #22543d;">📑 关联PPT: ${ppt.title}</h4>
+                                <p style="color: #666; margin-bottom: 10px;">第 ${c.slideNumber} 页</p>
+                                <img src="${slide.path}" style="max-width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" onclick="window.open('${slide.path}', '_blank')">
+                                <p style="color: #999; font-size: 12px; margin-top: 10px;">点击图片查看大图</p>
+                            </div>
+                        `;
+                    }
+                }
             }
-            cases.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            document.getElementById('caseDetailContent').innerHTML = `
+                <div class="form-section">
+                    <div class="form-title">${c.stockName} ${c.stockCode}</div>
+                    <div class="case-info-row"><span class="case-label">日期</span><span class="case-value">${formatDate(c.date)}</span></div>
+                    <div class="case-info-row"><span class="case-label">方法</span><span class="case-value">${c.method}</span></div>
+                    ${c.support ? `<div class="case-info-row"><span class="case-label">支撑/买点</span><span class="case-value">${c.support}</span></div>` : ''}
+                    ${c.resistance ? `<div class="case-info-row"><span class="case-label">压力/卖点</span><span class="case-value">${c.resistance}</span></div>` : ''}
+                    ${c.stopLoss ? `<div class="case-info-row"><span class="case-label">止损位</span><span class="case-value">${c.stopLoss}</span></div>` : ''}
+                    ${c.target ? `<div class="case-info-row"><span class="case-label">目标位</span><span class="case-value">${c.target}</span></div>` : ''}
+                    ${c.content ? `<div style="margin-top: 15px; padding: 15px; background: var(--light); border-radius: 10px;"><p>${c.content}</p></div>` : ''}
+                    <div class="case-tags" style="margin-top: 15px;">${c.tags?.map(t => `<span class="case-tag">${t}</span>`).join('') || ''}</div>
+                    ${pptSection}
+                </div>
+            `;
+
+            document.getElementById('caseDetailModal').classList.add('show');
+        }
+
+        // PPT库
+        function renderPptLibrary() {
+            let ppts = allData.pptLibrary;
+            if (selectedTags.length > 0) {
+                ppts = ppts.filter(p => selectedTags.some(tag => p.tags?.includes(tag)));
+            }
+            ppts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             const container = document.getElementById('pptGrid');
-            if (cases.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-icon">📑</div><p>暂无PPT案例</p></div>';
+            if (ppts.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-icon">📑</div><p>暂无PPT</p></div>';
                 return;
             }
 
-            container.innerHTML = cases.map(c => `
-                <div class="case-card">
+            container.innerHTML = ppts.map(p => `
+                <div class="ppt-card">
                     <div class="case-header">
-                        <div class="case-title">${c.title}</div>
-                        <div class="case-date">${formatDate(c.date)}</div>
+                        <div class="case-title">${p.title}</div>
+                        <div class="case-date">${formatDate(p.date)} · ${p.slides?.length || 0}页</div>
                     </div>
+                    ${p.slides && p.slides.length > 0 ? `
+                    <div class="ppt-preview">
+                        ${p.slides.slice(0, 3).map(s => `<img src="${s.path}">`).join('')}
+                    </div>
+                    ` : ''}
                     <div class="case-body">
-                        <div class="case-info-row"><span class="case-label">类型</span><span class="case-value">${c.verificationType}</span></div>
-                        <div class="case-info-row"><span class="case-label">股票</span><span class="case-value">${c.stocks?.map(s => s.name).join(', ') || '无'}</span></div>
-                        <div class="case-tags">${c.tags?.map(t => `<span class="case-tag">${t}</span>`).join('') || ''}</div>
+                        ${p.verificationType ? `<div class="case-info-row"><span class="case-label">类型</span><span class="case-value">${p.verificationType}</span></div>` : ''}
+                        <div class="case-tags">${p.tags?.map(t => `<span class="case-tag">${t}</span>`).join('') || ''}</div>
                     </div>
                     <div class="case-actions">
-                        <button class="btn btn-danger btn-sm" onclick="deletePptCase('${c.id}')">删除</button>
+                        <button class="btn btn-primary btn-sm" onclick="viewPptDetail('${p.id}')">👁️ 查看</button>
+                        <button class="btn btn-danger btn-sm" onclick="deletePpt('${p.id}')">删除</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function handlePptSubmit(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            
-            const stocks = [];
-            if (data.stocks) {
-                data.stocks.split(',').forEach(s => {
-                    const parts = s.split(':');
-                    if (parts.length === 2) stocks.push({ name: parts[0].trim(), code: parts[1].trim() });
-                });
-            }
-            if (data.tags) data.tags = data.tags.split(',').map(t => t.trim()).filter(t => t);
+        function viewPptDetail(pptId) {
+            const ppt = allData.pptLibrary.find(p => p.id === pptId);
+            if (!ppt) return;
 
-            try {
-                const response = await fetch('/api/ppt-cases', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...data, stocks })
-                });
-                if (response.ok) {
-                    closeModal('addPptModal');
-                    e.target.reset();
-                    loadAllData();
-                    alert('PPT案例添加成功！');
-                }
-            } catch (err) {
-                alert('添加失败');
-            }
+            document.getElementById('viewPptTitle').textContent = `📑 ${ppt.title}`;
+            document.getElementById('viewPptContent').innerHTML = `
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">日期</label>
+                            <p>${formatDate(ppt.date)}</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">页面数</label>
+                            <p>${ppt.slides?.length || 0} 页</p>
+                        </div>
+                        ${ppt.verificationType ? `
+                        <div class="form-group">
+                            <label class="form-label">类型</label>
+                            <p>${ppt.verificationType}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">标签</label>
+                        <div class="case-tags">${ppt.tags?.map(t => `<span class="case-tag">${t}</span>`).join('') || '无'}</div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <h4 class="form-title">PPT页面</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                        ${ppt.slides?.map((s, idx) => `
+                            <div style="border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer;" onclick="window.open('${s.path}', '_blank')">
+                                <img src="${s.path}" style="width: 100%; height: 150px; object-fit: cover;">
+                                <div style="padding: 10px; background: #f7fafc; text-align: center; font-size: 13px;">
+                                    第 ${idx + 1} 页
+                                </div>
+                            </div>
+                        `).join('') || '<p style="color: #999;">无页面</p>'}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('viewPptModal').classList.add('show');
         }
 
-        async function deletePptCase(id) {
-            if (!confirm('确定删除？')) return;
+        async function deletePpt(id) {
+            if (!confirm('确定删除？这将删除PPT及其所有页面图片。')) return;
             try {
-                await fetch(`/api/ppt-cases/${id}`, { method: 'DELETE' });
+                await fetch(`/api/ppt-library/${id}`, { method: 'DELETE' });
                 loadAllData();
             } catch (err) {
                 alert('删除失败');
             }
+        }
+
+        // 更新案例表单中的PPT选择器
+        function updateCasePptSelect() {
+            const select = document.getElementById('casePptSelect');
+            select.innerHTML = '<option value="">不关联PPT</option>' +
+                allData.pptLibrary.map(p => `<option value="${p.id}">${p.title} (${p.slides?.length || 0}页)</option>`).join('');
+        }
+
+        function loadCasePptSlides() {
+            const pptId = document.getElementById('casePptSelect').value;
+            const container = document.getElementById('casePptSlidesContainer');
+            const slidesGrid = document.getElementById('casePptSlides');
+            
+            if (!pptId) {
+                container.style.display = 'none';
+                return;
+            }
+
+            const ppt = allData.pptLibrary.find(p => p.id === pptId);
+            if (!ppt || !ppt.slides) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            slidesGrid.innerHTML = ppt.slides.map(s => `
+                <div class="slide-item ${selectedSlideNumber === s.slideNumber ? 'selected' : ''}" onclick="selectCaseSlide(${s.slideNumber})">
+                    <span class="slide-number">${s.slideNumber}</span>
+                    <img src="${s.path}">
+                </div>
+            `).join('');
+        }
+
+        function selectCaseSlide(slideNumber) {
+            selectedSlideNumber = slideNumber;
+            loadCasePptSlides();
         }
 
         // 反馈
@@ -931,26 +1167,99 @@
             showAddCaseModal();
         }
 
-        // 搜索
-        function performSearch() {
-            const keyword = document.getElementById('globalSearch').value.toLowerCase();
-            if (!keyword) { renderCases(); renderPptCases(); return; }
+        // 搜索功能
+        async function performSearch() {
+            const keyword = document.getElementById('globalSearch').value.trim();
+            if (!keyword) {
+                document.getElementById('searchResultsContainer').innerHTML = '';
+                return;
+            }
 
-            const filteredCases = allData.cases.filter(c =>
-                c.stockName?.toLowerCase().includes(keyword) ||
-                c.stockCode?.toLowerCase().includes(keyword) ||
-                c.method?.toLowerCase().includes(keyword) ||
-                c.tags?.some(t => t.toLowerCase().includes(keyword))
+            // 本地搜索案例
+            const matchedCases = allData.cases.filter(c =>
+                c.stockName?.toLowerCase().includes(keyword.toLowerCase()) ||
+                c.stockCode?.toLowerCase().includes(keyword.toLowerCase()) ||
+                c.method?.toLowerCase().includes(keyword.toLowerCase()) ||
+                c.tags?.some(t => t.toLowerCase().includes(keyword.toLowerCase()))
             );
 
-            const filteredPpt = allData.pptCases.filter(c =>
-                c.title?.toLowerCase().includes(keyword) ||
-                c.stocks?.some(s => s.name?.toLowerCase().includes(keyword)) ||
-                c.tags?.some(t => t.toLowerCase().includes(keyword))
-            );
+            // 搜索PPT库
+            let pptResults = [];
+            allData.pptLibrary.forEach(ppt => {
+                // 搜索PPT标题
+                if (ppt.title?.toLowerCase().includes(keyword.toLowerCase())) {
+                    pptResults.push({
+                        type: 'ppt',
+                        ppt: ppt,
+                        matchType: 'title',
+                        matchText: ppt.title
+                    });
+                }
+                // 搜索标签
+                else if (ppt.tags?.some(tag => tag.toLowerCase().includes(keyword.toLowerCase()))) {
+                    const matchedTags = ppt.tags.filter(t => t.toLowerCase().includes(keyword.toLowerCase()));
+                    pptResults.push({
+                        type: 'ppt',
+                        ppt: ppt,
+                        matchType: 'tag',
+                        matchText: matchedTags.join(', ')
+                    });
+                }
+            });
 
-            document.getElementById('casesGrid').innerHTML = filteredCases.map(c => renderCaseCard(c)).join('') || '<div class="empty-state" style="grid-column:1/-1">无结果</div>';
-            document.getElementById('pptGrid').innerHTML = filteredPpt.map(c => renderPptCard(c)).join('') || '<div class="empty-state" style="grid-column:1/-1">无结果</div>';
+            let html = '';
+            
+            if (matchedCases.length > 0) {
+                html += `
+                    <div class="search-results">
+                        <h4 style="margin-bottom: 15px;">📚 匹配的案例 (${matchedCases.length})</h4>
+                        ${matchedCases.map(c => {
+                            let pptPreview = '';
+                            if (c.pptId) {
+                                const ppt = allData.pptLibrary.find(p => p.id === c.pptId);
+                                if (ppt) {
+                                    const slide = ppt.slides.find(s => s.slideNumber === c.slideNumber);
+                                    if (slide) {
+                                        pptPreview = `<img src="${slide.path}" class="result-preview-img" onclick="event.stopPropagation(); window.open('${slide.path}', '_blank')">`;
+                                    }
+                                }
+                            }
+                            return `
+                                <div class="search-result-item" onclick="showCaseDetail('${c.id}')">
+                                    <div class="result-ppt-title">${c.stockName} ${c.stockCode}</div>
+                                    <div class="result-match-info">${c.method} · ${formatDate(c.date)}</div>
+                                    ${pptPreview}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            if (pptResults.length > 0) {
+                html += `
+                    <div class="search-results">
+                        <h4 style="margin-bottom: 15px;">📑 匹配的PPT (${pptResults.length})</h4>
+                        ${pptResults.map(r => `
+                            <div class="search-result-item" onclick="viewPptDetail('${r.ppt.id}')">
+                                <div class="result-ppt-title">${r.ppt.title}</div>
+                                <div class="result-match-info">匹配: ${r.matchType === 'title' ? '标题' : '标签'} - ${r.matchText}</div>
+                                ${r.ppt.slides && r.ppt.slides.length > 0 ? `
+                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                        ${r.ppt.slides.slice(0, 3).map(s => `<img src="${s.path}" style="width: 100px; height: 70px; object-fit: cover; border-radius: 6px;">`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            if (!html) {
+                html = '<div class="search-results"><p style="color: #999; text-align: center;">未找到匹配结果</p></div>';
+            }
+
+            document.getElementById('searchResultsContainer').innerHTML = html;
         }
 
         // 图表
@@ -1044,6 +1353,131 @@
             reader.readAsText(file);
         }
 
+        // PPT上传相关
+        function handlePptFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.name.endsWith('.pptx') && !file.name.endsWith('.ppt')) {
+                alert('请选择 .pptx 或 .ppt 文件');
+                return;
+            }
+            
+            selectedPptFile = file;
+            document.getElementById('pptFileName').textContent = file.name;
+            document.getElementById('pptUploadPreview').style.display = 'block';
+            document.getElementById('pptUploadBtn').disabled = false;
+        }
+
+        async function uploadPptFile() {
+            if (!selectedPptFile) {
+                alert('请先选择PPT文件');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('pptFile', selectedPptFile);
+
+            document.getElementById('pptUploadStep1').style.display = 'none';
+            document.getElementById('pptUploadProgress').style.display = 'block';
+
+            try {
+                const response = await fetch('/api/ppt-library/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentPptFileId = result.fileId;
+                    extractedPptSlides = result.slides || [];
+                    
+                    document.getElementById('pptUploadProgress').style.display = 'none';
+                    document.getElementById('pptUploadStep2').style.display = 'block';
+                    document.getElementById('pptSlideCount').textContent = extractedPptSlides.length;
+                    document.getElementById('pptUploadDate').value = new Date().toISOString().split('T')[0];
+                    
+                    // 显示提取的页面
+                    const slidesGrid = document.getElementById('pptSlidesGrid');
+                    if (extractedPptSlides.length > 0) {
+                        slidesGrid.innerHTML = extractedPptSlides.map(s => `
+                            <div class="slide-item">
+                                <span class="slide-number">${s.slideNumber}</span>
+                                <img src="${s.path}" onclick="window.open('${s.path}', '_blank')">
+                            </div>
+                        `).join('');
+                    } else {
+                        slidesGrid.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">未提取到页面</p>';
+                    }
+                } else {
+                    throw new Error(result.error || '上传失败');
+                }
+            } catch (err) {
+                alert('上传失败: ' + err.message);
+                document.getElementById('pptUploadProgress').style.display = 'none';
+                document.getElementById('pptUploadStep1').style.display = 'block';
+            }
+        }
+
+        async function savePptToLibrary() {
+            const title = document.getElementById('pptUploadTitle').value.trim();
+            const date = document.getElementById('pptUploadDate').value;
+            const verificationType = document.getElementById('pptUploadType').value;
+            const tagsStr = document.getElementById('pptUploadTags').value;
+
+            if (!title || !date) {
+                alert('请填写必填项（标题、日期）');
+                return;
+            }
+
+            const data = {
+                title,
+                date,
+                verificationType,
+                tags: tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [],
+                slides: extractedPptSlides,
+                fileId: currentPptFileId
+            };
+
+            try {
+                const response = await fetch('/api/ppt-library', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeModal('uploadPptModal');
+                    resetPptUpload();
+                    loadAllData();
+                    alert('PPT已保存到PPT库！');
+                } else {
+                    throw new Error('保存失败');
+                }
+            } catch (err) {
+                alert('保存失败: ' + err.message);
+            }
+        }
+
+        function resetPptUpload() {
+            selectedPptFile = null;
+            extractedPptSlides = [];
+            currentPptFileId = null;
+            
+            document.getElementById('pptFileInput').value = '';
+            document.getElementById('pptFileName').textContent = '';
+            document.getElementById('pptUploadPreview').style.display = 'none';
+            document.getElementById('pptUploadBtn').disabled = true;
+            document.getElementById('pptUploadStep1').style.display = 'block';
+            document.getElementById('pptUploadStep2').style.display = 'none';
+            document.getElementById('pptUploadProgress').style.display = 'none';
+            document.getElementById('pptSlidesGrid').innerHTML = '';
+            document.getElementById('pptUploadTitle').value = '';
+            document.getElementById('pptUploadType').value = '';
+            document.getElementById('pptUploadTags').value = '';
+        }
+
         // 工具函数
         function formatDate(dateStr) {
             return moment(dateStr).format('YYYY年MM月DD日');
@@ -1052,11 +1486,12 @@
         function showAddCaseModal() {
             document.getElementById('addCaseModal').classList.add('show');
             document.querySelector('#caseForm input[name="date"]').value = new Date().toISOString().split('T')[0];
+            updateCasePptSelect();
         }
 
-        function showAddPptModal() {
-            document.getElementById('addPptModal').classList.add('show');
-            document.querySelector('#pptForm input[name="date"]').value = new Date().toISOString().split('T')[0];
+        function showUploadPptModal() {
+            document.getElementById('uploadPptModal').classList.add('show');
+            resetPptUpload();
         }
 
         function showAddFeedbackModal() {
